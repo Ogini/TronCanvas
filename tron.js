@@ -3,17 +3,27 @@
  * and open the template in the editor.
  */
 
-function Tron(maxX, maxY) {
-	this.maxX = maxX;
-	this.maxY = maxY;
-	this.x = Math.floor(Math.random() * this.maxX);
-	this.y = Math.floor(Math.random() * this.maxY);
-	this.c = Math.floor(Math.random() * 256 * 256 * 256);
-	this.dir = Math.floor(Math.random() * 4);
+function Tron(surface, color) {
+	this.maxX = surface.width;
+	this.maxY = surface.height;
+  this.surface = surface;
+  this.Init(color);
 }
 
-Tron.prototype.Move = function() {
-	switch (this.dir) {
+Tron.prototype.Init = function(color) {
+  this.x = Math.floor(Math.random() * this.maxX);
+	this.y = Math.floor(Math.random() * this.maxY);
+  if (color) {
+    this.c = color;
+  } else {
+    this.c = Math.floor(Math.random() * 256 * 256 * 256);
+  }
+	this.dir = Math.floor(Math.random() * 4);
+  this.alive = 1;
+}
+
+Tron.prototype.MoveIt = function() {
+  switch (this.dir) {
 		case 0:
 			this.x = (this.x + 1) % this.maxX;
 			break;
@@ -25,7 +35,7 @@ Tron.prototype.Move = function() {
 			if (this.x < 0) {
 				this.x += this.maxX;
 			}
-			break;
+      break;
 		case 3:
 			this.y--;
 			if (this.y < 0) {
@@ -33,6 +43,42 @@ Tron.prototype.Move = function() {
 			}
 			break;
 	}
+}
+
+Tron.prototype.Move = function() {
+  if (this.alive) {
+    var oldX = this.x;
+    var oldY = this.y;
+    this.MoveIt();
+    if (this.surface.getPixel(this.x, this.y) > 0) {
+      this.x = oldX;
+      this.y = oldY;
+      this.dir += Math.floor(Math.random() * 2) * 2 - 1;
+      this.dir %= 4;
+      if (this.dir < 0) {
+        this.dir += 4;
+      }
+      this.MoveIt();
+      if (this.surface.getPixel(this.x, this.y) > 0) {
+        this.x = oldX;
+        this.y = oldY;
+        this.dir -= 2;
+        this.dir %= 4;
+        if (this.dir < 0) {
+          this.dir += 4;
+        }
+        this.MoveIt();
+        if (this.surface.getPixel(this.x, this.y) > 0) {
+          this.alive = 0;
+        }
+      }
+    }
+    if (this.alive) {
+      this.surface.plot(this.x, this.y, this.c);
+    } else {
+      this.Init(this.c);
+    }
+  }
 }
 
 var Trons = [];
@@ -78,6 +124,11 @@ Screen = {
 		this.pix[idx+3] = 255;
 	},
 
+  getPixel: function(x, y) {
+    var idx = (y * this.height + x) * 4;
+    return this.pix[idx] * 256 * 256 + this.pix[idx + 1] * 256 + this.pix[idx + 2];
+  },
+
 	show: function() {
 		this.context.putImageData(this.imgd, 0, 0);
 	}
@@ -86,16 +137,27 @@ Screen = {
 function Statics(c) {
 	for (var i = 0; i<c; i++) {
 		Trons[i].Move();
-		Screen.plot(Trons[i].x, Trons[i].y, Trons[i].c);
 	}
 	Screen.show();
 }
 
+var numTrons = 500;
 
 $(function() {
 	Screen.init('tron');
-	for (var i=0; i < 100; i++) {
-		Trons[i] = new Tron(Screen.width, Screen.height);
+  var nT = parseFloat(numTrons);
+  var r1 = parseFloat(Math.floor(Math.random() * 256));
+  var r2 = parseFloat(Math.floor(Math.random() * 256));
+  var g1 = parseFloat(Math.floor(Math.random() * 256));
+  var g2 = parseFloat(Math.floor(Math.random() * 256));
+  var b1 = parseFloat(Math.floor(Math.random() * 256));
+  var b2 = parseFloat(Math.floor(Math.random() * 256));
+  var c = r1 * 256.0 * 256.0 + g1 * 256.0 + b1;
+	for (var i=0; i < numTrons; i++) {
+		Trons[i] = new Tron(Screen, Math.floor(c));
+    c = Math.floor(r1 + (r2 - r1) * (i / nT)) * 256 * 256;
+    c += Math.floor(g1 + (g2 - g1) * (i / nT)) * 256;
+    c += Math.floor(b1 + (b2 - b1) * (i / nT));
 	}
-	setInterval(Statics, 1, 100);
+	setInterval(Statics, 1, numTrons);
 });
