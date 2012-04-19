@@ -8,7 +8,7 @@
 		<script src="tron.js"></script>
 	</head>
 	<body>
-		<canvas id="tron" width="800" height="600"></canvas>
+		<canvas id="tron" width="800" height="800"></canvas>
 		<?php
 		// put your code here
 		?>

@@ -3,6 +3,40 @@
  * and open the template in the editor.
  */
 
+function Tron(maxX, maxY) {
+	this.maxX = maxX;
+	this.maxY = maxY;
+	this.x = Math.floor(Math.random() * this.maxX);
+	this.y = Math.floor(Math.random() * this.maxY);
+	this.c = Math.floor(Math.random() * 256 * 256 * 256);
+	this.dir = Math.floor(Math.random() * 4);
+}
+
+Tron.prototype.Move = function() {
+	switch (this.dir) {
+		case 0:
+			this.x = (this.x + 1) % this.maxX;
+			break;
+		case 1:
+			this.y = (this.y + 1) % this.maxY;
+			break;
+		case 2:
+			this.x--;
+			if (this.x < 0) {
+				this.x += this.maxX;
+			}
+			break;
+		case 3:
+			this.y--;
+			if (this.y < 0) {
+				this.y += this.maxY;
+			}
+			break;
+	}
+}
+
+var Trons = [];
+
 Screen = {
 	width: null,
 	height: null,
@@ -49,11 +83,10 @@ Screen = {
 	}
 }
 
-function Statics() {
-	for (var y=0; y<Screen.height; y++) {
-		for (var x=0; x<Screen.width; x++) {
-			Screen.plot(x, y, Math.floor(Math.random() * 256 * 256 * 256));
-		}
+function Statics(c) {
+	for (var i = 0; i<c; i++) {
+		Trons[i].Move();
+		Screen.plot(Trons[i].x, Trons[i].y, Trons[i].c);
 	}
 	Screen.show();
 }
@@ -61,5 +94,8 @@ function Statics() {
 
 $(function() {
 	Screen.init('tron');
-	setInterval(Statics, 25);
+	for (var i=0; i < 100; i++) {
+		Trons[i] = new Tron(Screen.width, Screen.height);
+	}
+	setInterval(Statics, 1, 100);
 });
